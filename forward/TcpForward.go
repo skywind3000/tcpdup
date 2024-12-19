@@ -24,8 +24,8 @@ type TcpForward struct {
 	wg       sync.WaitGroup
 	srcAddr  *net.TCPAddr
 	dstAddr  *net.TCPAddr
-	reader   string
-	writer   string
+	input    string
+	output   string
 	logger   *log.Logger
 }
 
@@ -45,12 +45,12 @@ func (self *TcpForward) SetLogger(logger *log.Logger) {
 	self.logger = logger
 }
 
-func (self *TcpForward) SetReader(address string) {
-	self.reader = address
+func (self *TcpForward) SetInput(address string) {
+	self.input = address
 }
 
-func (self *TcpForward) SetWriter(address string) {
-	self.writer = address
+func (self *TcpForward) SetOutput(address string) {
+	self.output = address
 }
 
 func (self *TcpForward) Open(srcAddr *net.TCPAddr, dstAddr *net.TCPAddr) error {
