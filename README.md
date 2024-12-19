@@ -1,2 +1,3 @@
-# tcpdup
-Tcp traffic duplication
+# Preface
+
+Tcp traffic duplicator
