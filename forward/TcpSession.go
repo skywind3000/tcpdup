@@ -203,10 +203,20 @@ func (self *TcpSession) forward(src *net.TCPConn, dst *net.TCPConn, dup *net.TCP
 	self.wg.Done()
 }
 
+func (self *TcpSession) KeepAlive(conn *net.TCPConn) {
+	if conn != nil {
+		conn.SetKeepAlive(true)
+	}
+}
+
 func (self *TcpSession) Run() {
 	if self.logger != nil {
 		self.logger.Printf("[%s] session started", self.name)
 	}
+	self.KeepAlive(self.local)
+	self.KeepAlive(self.remote)
+	self.KeepAlive(self.cin)
+	self.KeepAlive(self.cout)
 	self.wg.Add(2)
 	go self.forward(self.local, self.remote, self.cout)
 	go self.forward(self.remote, self.local, self.cin)
