@@ -9,7 +9,6 @@
 package forward
 
 import (
-	"io"
 	"log"
 	"net"
 	"sync"
@@ -36,6 +35,8 @@ func NewTcpForward() *TcpForward {
 		srcAddr:  nil,
 		dstAddr:  nil,
 		logger:   nil,
+		input:    "",
+		output:   "",
 	}
 	self.closing.Store(false)
 	return self
@@ -82,6 +83,10 @@ func (self *TcpForward) Open(srcAddr *net.TCPAddr, dstAddr *net.TCPAddr) error {
 	return nil
 }
 
+func (self *TcpForward) Wait() {
+	self.wg.Wait()
+}
+
 func (self *TcpForward) shutdown() {
 	self.closing.Store(true)
 	if self.listener != nil {
@@ -99,16 +104,18 @@ func (self *TcpForward) Close() {
 
 func (self *TcpForward) handle(conn *net.TCPConn) {
 	defer conn.Close()
-	sock, err := net.DialTCP("tcp", nil, self.dstAddr)
-	if err != nil {
+	name := conn.RemoteAddr().String()
+	session := NewTcpSession(name, conn)
+	session.SetLogger(self.logger)
+	defer session.Close()
+	if session.SetRemote(self.dstAddr) != nil {
 		return
 	}
-	defer sock.Close()
-	copyDie := make(chan int)
-	go func() {
-		io.Copy(conn, dst)
-		copyDie <- 1
-	}()
-	io.Copy(dst, conn)
-	<-copyDie
+	if session.SetInput(self.input) != nil {
+		return
+	}
+	if session.SetOutput(self.output) != nil {
+		return
+	}
+	session.Run()
 }

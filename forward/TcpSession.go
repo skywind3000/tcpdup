@@ -77,6 +77,9 @@ func (self *TcpSession) SetLogger(logger *log.Logger) {
 func (self *TcpSession) SetRemote(addr *net.TCPAddr) error {
 	conn, err := net.DialTCP("tcp", nil, addr)
 	if err != nil {
+		if self.logger != nil {
+			self.logger.Printf("[%s] remote connect error: %s", self.name, err)
+		}
 		return err
 	}
 	self.remote = conn
@@ -94,6 +97,9 @@ func (self *TcpSession) SetInput(addr string) error {
 	}
 	conn, err := net.DialTCP("tcp", nil, a)
 	if err != nil {
+		if self.logger != nil {
+			self.logger.Printf("[%s] input connect error: %s", self.name, err)
+		}
 		return err
 	}
 	self.cin = conn
@@ -111,6 +117,9 @@ func (self *TcpSession) SetOutput(addr string) error {
 	}
 	conn, err := net.DialTCP("tcp", nil, a)
 	if err != nil {
+		if self.logger != nil {
+			self.logger.Printf("[%s] output connect error: %s", self.name, err)
+		}
 		return err
 	}
 	self.cout = conn
@@ -189,7 +198,7 @@ func (self *TcpSession) forward(src *net.TCPConn, dst *net.TCPConn, dup *net.TCP
 	self.wg.Done()
 }
 
-func (self *TcpSession) Start() {
+func (self *TcpSession) Run() {
 	if self.logger != nil {
 		self.logger.Printf("[%s] session started", self.name)
 	}
