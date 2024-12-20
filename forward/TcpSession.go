@@ -9,26 +9,32 @@
 package forward
 
 import (
+	"log"
 	"net"
 	"sync"
 	"sync/atomic"
 )
 
 type TcpSession struct {
+	name    string
 	lock    sync.Mutex
+	wg      sync.WaitGroup
 	closing atomic.Bool
 	local   *net.TCPConn
 	remote  *net.TCPConn
 	cin     *net.TCPConn
 	cout    *net.TCPConn
+	logger  *log.Logger
 }
 
-func NewTcpSession(conn *net.TCPConn) *TcpSession {
+func NewTcpSession(name string, conn *net.TCPConn) *TcpSession {
 	self := &TcpSession{
+		name:   name,
 		local:  conn,
 		remote: nil,
 		cin:    nil,
 		cout:   nil,
+		logger: nil,
 	}
 	self.closing.Store(false)
 	return self
@@ -62,6 +68,10 @@ func (self *TcpSession) Close() {
 
 func (self *TcpSession) IsClosing() bool {
 	return self.closing.Load()
+}
+
+func (self *TcpSession) SetLogger(logger *log.Logger) {
+	self.logger = logger
 }
 
 func (self *TcpSession) SetRemote(addr *net.TCPAddr) error {
@@ -107,5 +117,87 @@ func (self *TcpSession) SetOutput(addr string) error {
 	return nil
 }
 
+func (self *TcpSession) blackhole(conn *net.TCPConn) {
+	buf := make([]byte, 8192)
+	for {
+		if self.closing.Load() {
+			break
+		}
+		n, err := conn.Read(buf)
+		if err != nil {
+			break
+		}
+		if n <= 0 {
+			break
+		}
+	}
+}
+
+func (self *TcpSession) forward(src *net.TCPConn, dst *net.TCPConn, dup *net.TCPConn) {
+	defer self.Close()
+	if dup != nil {
+		go self.blackhole(dup)
+	}
+	buf := make([]byte, 8192)
+	for {
+		n, err := src.Read(buf)
+		if err != nil {
+			if self.logger != nil {
+				if src == self.local {
+					self.logger.Printf("[%s] local read error: %s", self.name, err)
+				} else {
+					self.logger.Printf("[%s] remote read error: %s", self.name, err)
+				}
+			}
+			break
+		}
+		if n <= 0 {
+			if self.logger != nil {
+				if src == self.local {
+					self.logger.Printf("[%s] local read EOF", self.name)
+				} else {
+					self.logger.Printf("[%s] remote read EOF", self.name)
+				}
+			}
+			break
+		}
+		_, err = dst.Write(buf[:n])
+		if err != nil {
+			if self.logger != nil {
+				if src == self.local {
+					self.logger.Printf("[%s] remote write error: %s", self.name, err)
+				} else {
+					self.logger.Printf("[%s] local write error: %s", self.name, err)
+				}
+			}
+			break
+		}
+		if dup != nil {
+			_, err = dup.Write(buf[:n])
+			if err != nil {
+				if self.logger != nil {
+					if src == self.local {
+						self.logger.Printf("[%s] output write error: %s", self.name, err)
+					} else {
+						self.logger.Printf("[%s] input write error: %s", self.name, err)
+					}
+				}
+				break
+			}
+		}
+	}
+	self.wg.Done()
+}
+
 func (self *TcpSession) Start() {
+	if self.logger != nil {
+		self.logger.Printf("[%s] session started", self.name)
+	}
+	self.wg.Add(2)
+	go self.forward(self.local, self.remote, self.cout)
+	go self.forward(self.remote, self.local, self.cin)
+	self.wg.Wait()
+	if self.logger != nil {
+		self.logger.Printf("[%s] session closed", self.name)
+	}
 }
