@@ -112,10 +112,10 @@ func (self *TcpForward) handle(conn *net.TCPConn) {
 		return
 	}
 	if session.SetInput(self.input) != nil {
-		return
+		// return
 	}
 	if session.SetOutput(self.output) != nil {
-		return
+		// return
 	}
 	session.Run()
 }

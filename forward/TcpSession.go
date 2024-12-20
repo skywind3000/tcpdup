@@ -99,6 +99,7 @@ func (self *TcpSession) SetInput(addr string) error {
 	if err != nil {
 		if self.logger != nil {
 			self.logger.Printf("[%s] input connect error: %s", self.name, err)
+			self.logger.Printf("[%s] disable input", self.name)
 		}
 		return err
 	}
@@ -119,6 +120,7 @@ func (self *TcpSession) SetOutput(addr string) error {
 	if err != nil {
 		if self.logger != nil {
 			self.logger.Printf("[%s] output connect error: %s", self.name, err)
+			self.logger.Printf("[%s] disable output", self.name)
 		}
 		return err
 	}
@@ -148,6 +150,7 @@ func (self *TcpSession) forward(src *net.TCPConn, dst *net.TCPConn, dup *net.TCP
 		go self.blackhole(dup)
 	}
 	buf := make([]byte, 8192)
+	lost := false
 	for {
 		n, err := src.Read(buf)
 		if err != nil {
@@ -181,17 +184,19 @@ func (self *TcpSession) forward(src *net.TCPConn, dst *net.TCPConn, dup *net.TCP
 			}
 			break
 		}
-		if dup != nil {
+		if dup != nil && lost == false {
 			_, err = dup.Write(buf[:n])
 			if err != nil {
 				if self.logger != nil {
 					if src == self.local {
 						self.logger.Printf("[%s] output write error: %s", self.name, err)
+						self.logger.Printf("[%s] disable output", self.name)
 					} else {
 						self.logger.Printf("[%s] input write error: %s", self.name, err)
+						self.logger.Printf("[%s] disable input", self.name)
 					}
 				}
-				break
+				lost = true
 			}
 		}
 	}
