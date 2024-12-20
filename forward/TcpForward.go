@@ -99,11 +99,11 @@ func (self *TcpForward) Close() {
 
 func (self *TcpForward) handle(conn *net.TCPConn) {
 	defer conn.Close()
-	dst, err := net.DialTCP("tcp", nil, self.dstAddr)
+	sock, err := net.DialTCP("tcp", nil, self.dstAddr)
 	if err != nil {
 		return
 	}
-	defer dst.Close()
+	defer sock.Close()
 	copyDie := make(chan int)
 	go func() {
 		io.Copy(conn, dst)
