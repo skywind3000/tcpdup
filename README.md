@@ -24,6 +24,19 @@ tcpdup -listen 0.0.0.0:8080 -target 192.168.1.100:8080 \
 3) Copy the incoming traffic (server->client) to 127.0.0.1:8082
 4) Both 'output' and 'input' are optional, you can use only one of them.
 
+## Help
+
+```text
+Usage of ./tcpdup:
+-listen
+  local address, eg: 0.0.0.0:8080
+-target
+  destination address, eg: 8.8.8.8:8080
+-input
+  input duplication address, eg: 127.0.0.1:8081
+-output
+  output duplication address, eg: 127.0.0.1:8082
+```
 
 ## Credit
 
