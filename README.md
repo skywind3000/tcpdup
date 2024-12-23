@@ -29,13 +29,13 @@ tcpdup -listen 0.0.0.0:8080 -target 192.168.1.100:8080 \
 ```text
 Usage of ./tcpdup:
 -listen
-  local address, eg: 0.0.0.0:8080
+  local address (required), eg: 0.0.0.0:8080
 -target
-  destination address, eg: 8.8.8.8:8080
+  destination address (required), eg: 8.8.8.8:8080
 -input
-  input duplication address, eg: 127.0.0.1:8081
+  input duplication address (optional), eg: 127.0.0.1:8081
 -output
-  output duplication address, eg: 127.0.0.1:8082
+  output duplication address (optional), eg: 127.0.0.1:8082
 ```
 
 ## Credit

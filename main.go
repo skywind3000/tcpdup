@@ -39,10 +39,10 @@ func start(listen string, target string, input string, output string) int {
 }
 
 func main() {
-	listen := flag.String("listen", "", "local address, eg: 0.0.0.0:8080")
-	target := flag.String("target", "", "destination address, eg: 8.8.8.8:8080")
-	input := flag.String("input", "", "input duplication address, eg: 127.0.0.1:8081")
-	output := flag.String("output", "", "output duplication address, eg: 127.0.0.1:8082")
+	listen := flag.String("listen", "", "local address (required), eg: 0.0.0.0:8080")
+	target := flag.String("target", "", "destination address (required), eg: 8.8.8.8:8080")
+	input := flag.String("input", "", "input duplication address (optional), eg: 127.0.0.1:8081")
+	output := flag.String("output", "", "output duplication address (optional), eg: 127.0.0.1:8082")
 	flag.Usage = func() {
 		flagSet := flag.CommandLine
 		fmt.Printf("Usage of %s:\n", os.Args[0])
