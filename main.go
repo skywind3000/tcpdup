@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/skywind3000/tcpdup/forward"
 )
@@ -44,6 +46,16 @@ func main() {
 	if false {
 		start("0.0.0.0:8080", "127.0.0.1:8000", "127.0.0.1:8081", "127.0.0.1:8082")
 		return
+	}
+	flag.Usage = func() {
+		flagSet := flag.CommandLine
+		fmt.Printf("Usage of %s:\n", os.Args[0])
+		order := []string{"listen", "target", "input", "output"}
+		for _, name := range order {
+			flag := flagSet.Lookup(name)
+			fmt.Printf("-%s\n", flag.Name)
+			fmt.Printf("  %s\n", flag.Usage)
+		}
 	}
 	flag.Parse()
 	if listen == nil || target == nil {
