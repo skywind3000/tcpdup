@@ -65,7 +65,7 @@ func main() {
 			fmt.Printf("  %s\n", flag.Usage)
 		}
 	}
-	if true {
+	if false {
 		start("0.0.0.0:8080", "127.0.0.1:8000", "127.0.0.1:8081", "127.0.0.1:8082")
 		return
 	}
