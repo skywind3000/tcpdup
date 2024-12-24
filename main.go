@@ -3,17 +3,29 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 
 	"github.com/skywind3000/tcpdup/forward"
 )
 
+func getlogger() *log.Logger {
+	logFile, err := os.OpenFile("tcpdup.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		log.Printf("Failed to open log file: %s", err)
+		return log.Default()
+	}
+	multiWriter := io.MultiWriter(logFile, os.Stdout)
+	logger := log.New(multiWriter, "INFO: ", log.Ldate|log.Ltime|log.Lshortfile)
+	return logger
+}
+
 func start(listen string, target string, input string, output string) int {
 	if listen == "" || target == "" {
 		return -1
 	}
-	logger := log.Default()
+	logger := getlogger()
 	logger.Printf("Service starting:\n")
 	logger.Printf("config: listen %s\n", listen)
 	logger.Printf("config: target %s\n", target)
@@ -53,7 +65,7 @@ func main() {
 			fmt.Printf("  %s\n", flag.Usage)
 		}
 	}
-	if false {
+	if true {
 		start("0.0.0.0:8080", "127.0.0.1:8000", "127.0.0.1:8081", "127.0.0.1:8082")
 		return
 	}
